@@ -1,11 +1,11 @@
 'use client'; // Đây là Client Component vì cần useState và tương tác người dùng
 
-import { useState } from "react";
+import { useState, useMemo } from "react"; // <-- 1. THÊM IMPORT useMemo
 import { FloodPoint } from "@/lib/types";
 import { List, Map as MapIcon } from "lucide-react";
 import dynamic from "next/dynamic";
-import { Icon } from "leaflet";
-import Link from "next/link"; // <-- 1. THÊM IMPORT LINK
+import { Icon } from "leaflet"; // <-- Giữ lại import này
+import Link from "next/link";
 
 // Định nghĩa props
 interface FloodMapClientProps {
@@ -32,39 +32,51 @@ const Popup = dynamic(
   { ssr: false }
 );
 
-// Icon cho điểm ngập (Màu đỏ)
-const floodIcon = new Icon({
-  iconUrl:
-    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
-  iconRetinaUrl:
-    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
-  shadowUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});
-
-// Icon cho điểm không ngập (Màu xanh lá)
-const normalIcon = new Icon({
-  iconUrl:
-    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
-  iconRetinaUrl:
-    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
-  shadowUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});
-// ----------------------------
+// --- 2. XÓA ĐỊNH NGHĨA ICON KHỎI ĐÂY ---
+// const floodIcon = new Icon({ ... });
+// const normalIcon = new Icon({ ... });
+// ----------------------------------------
 
 // --- Component chính ---
 
 export default function FloodMapClient({ points }: FloodMapClientProps) {
   const [viewMode, setViewMode] = useState<"map" | "list">("map");
+
+  // --- 3. DI CHUYỂN ICON VÀO ĐÂY VỚI useMemo ---
+  // Bọc trong useMemo để đảm bảo code này chỉ chạy ở client
+  // và chỉ chạy 1 lần duy nhất, tránh lỗi "window is not defined"
+  const { floodIcon, normalIcon } = useMemo(() => {
+    // Icon cho điểm ngập (Màu đỏ)
+    const floodIcon = new Icon({
+      iconUrl:
+        "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
+      iconRetinaUrl:
+        "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
+      shadowUrl:
+        "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowSize: [41, 41],
+    });
+
+    // Icon cho điểm không ngập (Màu xanh lá)
+    const normalIcon = new Icon({
+      iconUrl:
+        "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
+      iconRetinaUrl:
+        "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
+      shadowUrl:
+        "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowSize: [41, 41],
+    });
+
+    return { floodIcon, normalIcon };
+  }, []); // Mảng rỗng đảm bảo nó chỉ chạy 1 lần khi component mount
+  // ---------------------------------------------
 
   // Lấy vị trí trung tâm (ví dụ: điểm đầu tiên)
   const centerPosition: [number, number] =
@@ -150,7 +162,7 @@ export default function FloodMapClient({ points }: FloodMapClientProps) {
               <Marker
                 key={point.id}
                 position={[point.lat_gps, point.long_gps]}
-                icon={point.status_flood === 1 ? floodIcon : normalIcon}
+                icon={point.status_flood === 1 ? floodIcon : normalIcon} // Code này giờ đã an toàn
               >
                 <Popup>
                   <div className="space-y-1">
