@@ -1,15 +1,16 @@
 'use client'; // Đây là Client Component vì cần useState và tương tác người dùng
 
-import { useState, useMemo } from "react"; // <-- 1. THÊM IMPORT useMemo
+import { useState, useMemo, useEffect } from "react"; // <-- 1. THÊM IMPORT useEffect
 import { FloodPoint } from "@/lib/types";
 import { List, Map as MapIcon } from "lucide-react";
 import dynamic from "next/dynamic";
 import { Icon } from "leaflet"; // <-- Giữ lại import này
 import Link from "next/link";
+import { getFloodData } from "@/lib/api"; // <-- 2. IMPORT HÀM GỌI API
 
 // Định nghĩa props
 interface FloodMapClientProps {
-  points: FloodPoint[];
+  points: FloodPoint[]; // Prop này là dữ liệu ban đầu do Server tải
 }
 
 // --- Cấu hình cho bản đồ ---
@@ -32,19 +33,38 @@ const Popup = dynamic(
   { ssr: false }
 );
 
-// --- 2. XÓA ĐỊNH NGHĨA ICON KHỎI ĐÂY ---
-// const floodIcon = new Icon({ ... });
-// const normalIcon = new Icon({ ... });
-// ----------------------------------------
-
 // --- Component chính ---
 
-export default function FloodMapClient({ points }: FloodMapClientProps) {
+export default function FloodMapClient({ points: initialPoints }: FloodMapClientProps) { // <-- 3. Đổi tên prop nhận vào
   const [viewMode, setViewMode] = useState<"map" | "list">("map");
+  const [points, setPoints] = useState(initialPoints); // <-- 4. TẠO STATE MỚI, dùng data ban đầu
+
+  // --- 5. THÊM useEffect ĐỂ TỰ ĐỘNG CẬP NHẬT ---
+  useEffect(() => {
+    // Hàm gọi API và cập nhật state
+    const refreshData = async () => {
+      try {
+        console.log("Đang làm mới dữ liệu bản đồ...");
+        const newPoints = await getFloodData();
+        setPoints(newPoints); // Cập nhật state với dữ liệu mới
+      } catch (error) {
+        console.error("Lỗi khi làm mới dữ liệu:", error);
+      }
+    };
+
+    // Đặt lịch gọi API mỗi 10 giây
+    const intervalId = setInterval(refreshData, 10000); // 10000ms = 10s
+
+    // Hàm dọn dẹp (cleanup)
+    // Sẽ được gọi khi component bị unmount (rời khỏi trang)
+    return () => {
+      clearInterval(intervalId); // Hủy bỏ interval
+    };
+  }, []); // Mảng rỗng `[]` đảm bảo effect này chỉ chạy 1 lần khi component mount
+  // ------------------------------------------------
 
   // --- 3. DI CHUYỂN ICON VÀO ĐÂY VỚI useMemo ---
-  // Bọc trong useMemo để đảm bảo code này chỉ chạy ở client
-  // và chỉ chạy 1 lần duy nhất, tránh lỗi "window is not defined"
+  // (Code này giữ nguyên)
   const { floodIcon, normalIcon } = useMemo(() => {
     // Icon cho điểm ngập (Màu đỏ)
     const floodIcon = new Icon({
@@ -79,6 +99,7 @@ export default function FloodMapClient({ points }: FloodMapClientProps) {
   // ---------------------------------------------
 
   // Lấy vị trí trung tâm (ví dụ: điểm đầu tiên)
+  // Code này giờ sẽ tự động dùng `points` TỪ STATE
   const centerPosition: [number, number] =
     points.length > 0
       ? [points[0].lat_gps, points[0].long_gps]
@@ -98,6 +119,8 @@ export default function FloodMapClient({ points }: FloodMapClientProps) {
   };
 
   return (
+    // Toàn bộ phần JSX này đã dùng `points` (là state)
+    // nên sẽ tự động re-render khi `setPoints` được gọi.
     <div className="flex-grow flex flex-col">
       {/* Nút chuyển đổi View */}
       <div className="mb-4 flex justify-end gap-2">
