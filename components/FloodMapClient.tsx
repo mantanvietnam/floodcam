@@ -1,12 +1,12 @@
 'use client'; // Đây là Client Component vì cần useState và tương tác người dùng
 
-import { useState, useMemo, useEffect } from "react"; // <-- 1. THÊM IMPORT useEffect
+import { useState, useMemo, useEffect } from "react"; // <-- IMPORT useEffect
 import { FloodPoint } from "@/lib/types";
 import { List, Map as MapIcon } from "lucide-react";
 import dynamic from "next/dynamic";
 import { Icon } from "leaflet"; // <-- Giữ lại import này
 import Link from "next/link";
-import { getFloodData } from "@/lib/api"; // <-- 2. IMPORT HÀM GỌI API
+import { getFloodData } from "@/lib/api"; // <-- IMPORT HÀM GỌI API
 
 // Định nghĩa props
 interface FloodMapClientProps {
@@ -35,11 +35,11 @@ const Popup = dynamic(
 
 // --- Component chính ---
 
-export default function FloodMapClient({ points: initialPoints }: FloodMapClientProps) { // <-- 3. Đổi tên prop nhận vào
+export default function FloodMapClient({ points: initialPoints }: FloodMapClientProps) { // <-- Đổi tên prop nhận vào
   const [viewMode, setViewMode] = useState<"map" | "list">("map");
-  const [points, setPoints] = useState(initialPoints); // <-- 4. TẠO STATE MỚI, dùng data ban đầu
+  const [points, setPoints] = useState(initialPoints); // <-- TẠO STATE MỚI, dùng data ban đầu
 
-  // --- 5. THÊM useEffect ĐỂ TỰ ĐỘNG CẬP NHẬT ---
+  // --- THÊM useEffect ĐỂ TỰ ĐỘNG CẬP NHẬT ---
   useEffect(() => {
     // Hàm gọi API và cập nhật state
     const refreshData = async () => {
@@ -63,8 +63,7 @@ export default function FloodMapClient({ points: initialPoints }: FloodMapClient
   }, []); // Mảng rỗng `[]` đảm bảo effect này chỉ chạy 1 lần khi component mount
   // ------------------------------------------------
 
-  // --- 3. DI CHUYỂN ICON VÀO ĐÂY VỚI useMemo ---
-  // (Code này giữ nguyên)
+  // --- DI CHUYỂN ICON VÀO ĐÂY VỚI useMemo (Sửa lỗi build) ---
   const { floodIcon, normalIcon } = useMemo(() => {
     // Icon cho điểm ngập (Màu đỏ)
     const floodIcon = new Icon({
@@ -177,10 +176,13 @@ export default function FloodMapClient({ points: initialPoints }: FloodMapClient
 
         {viewMode === "map" && (
           <MapContainer center={centerPosition} zoom={13} className="h-full w-full">
+            {/* --- THAY ĐỔI BẢN ĐỒ NỀN (TRÁNH ĐƯỜNG LƯỠI BÒ) --- */}
             <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+              url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
             />
+            {/* ---------------------------------------------------- */}
+            
             {points.map((point) => (
               <Marker
                 key={point.id}
@@ -199,7 +201,7 @@ export default function FloodMapClient({ points: initialPoints }: FloodMapClient
 
                     <Link
                       href={`/map/${point.id}`}
-                      className="mt-2 inline-block w-full text-center px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors" // <-- Đã thêm class 'text-white' ở đây
+                      className="mt-2 inline-block w-full text-center px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
                     >
                       Xem chi tiết
                     </Link>
