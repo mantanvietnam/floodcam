@@ -15,6 +15,7 @@ interface ApiCameraData {
   speed_max: number | null;
   width: number | null;
   acreage: number | null;
+  link_live_stream: string | null; // <-- THÊM TRƯỜNG MỚI TỪ API
 }
 
 interface ApiResponse {
@@ -87,6 +88,7 @@ export async function getFloodData(): Promise<FloodPoint[]> {
         max_speed_kmh: item.speed_max ?? undefined, // API (speed_max) -> App (max_speed_kmh)
         width_m: item.width ?? undefined, // API (width) -> App (width_m)
         affected_area_m2: item.acreage ?? undefined, // API (acreage) -> App (affected_area_m2)
+        link_live_stream: item.link_live_stream ?? undefined, // <-- THÊM TRƯỜNG MỚI VÀO LOGIC MAP
 
         // Các trường đã khớp tên
         name: item.name,

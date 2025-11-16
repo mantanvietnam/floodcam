@@ -17,4 +17,5 @@ export interface FloodPoint {
   affected_area_m2?: number; // Diện tích ngập
   width_m?: number; // Bề rộng
   depth_cm?: number; // Độ sâu (cm)
+  link_live_stream?: string; // <-- THÊM TRƯỜNG MỚI
 }
