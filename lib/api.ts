@@ -86,7 +86,7 @@ export async function getFloodData(): Promise<FloodPoint[]> {
         image_url: transformImageUrl(item.image, item.status_flood, item.name), // API (image) -> App (image_url)
         depth_cm: item.depth ?? undefined, // API (depth) -> App (depth_cm)
         max_speed_kmh: item.speed_max ?? undefined, // API (speed_max) -> App (max_speed_kmh)
-        width_m: item.width ?? undefined, // API (width) -> App (width_m)
+        width_cm: item.width ?? undefined, // <-- ĐỔI TÊN TỪ width_m
         affected_area_m2: item.acreage ?? undefined, // API (acreage) -> App (affected_area_m2)
         link_live_stream: item.link_live_stream ?? undefined, // <-- THÊM TRƯỜNG MỚI VÀO LOGIC MAP
 

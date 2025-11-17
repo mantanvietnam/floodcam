@@ -15,7 +15,7 @@ export interface FloodPoint {
   image_url?: string; // Ảnh minh họa
   max_speed_kmh?: number; // Vận tốc di chuyển tối đa
   affected_area_m2?: number; // Diện tích ngập
-  width_m?: number; // Bề rộng
+  width_cm?: number; // <-- ĐỔI TÊN TỪ width_m
   depth_cm?: number; // Độ sâu (cm)
   link_live_stream?: string; // <-- THÊM TRƯỜNG MỚI
 }

@@ -108,58 +108,6 @@ export default function FloodDetailClient({ initialPoint }: FloodDetailClientPro
   }, [point.id]); // Phụ thuộc vào point.id
   // ---------------------------------
 
-  // --- Logic render (giữ nguyên) ---
-  const renderLiveStream = () => {
-    if (!point.link_live_stream) {
-      // TRƯỜNG HỢP 1: Không có link stream -> Hiển thị ảnh
-      return (
-        <div>
-          <h2 className="text-xl font-semibold mb-3">Hình ảnh camera</h2>
-          <div className="aspect-video w-full bg-gray-200 rounded-lg overflow-hidden border">
-            <InteractiveImage
-              src={point.image_url}
-              alt={`Hình ảnh ${point.name}`}
-              fallbackText={point.name}
-            />
-          </div>
-        </div>
-      );
-    }
-
-    if (point.link_live_stream.endsWith('.m3u8')) {
-      // TRƯỜN HỢP 2: Link là HLS (.m3u8) -> Dùng HlsPlayer
-      return (
-        <div>
-          <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
-            <Video size={22} /> Live Stream
-          </h2>
-          <HlsPlayer src={point.link_live_stream} />
-        </div>
-      );
-    }
-
-    // TRƯỜNG HỢP 3: Link web khác (YouTube, v.v.) -> Dùng iframe
-    return (
-      <div>
-        <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
-          <Video size={22} /> Live Stream
-        </h2>
-        <div className="aspect-video w-full bg-gray-200 rounded-lg overflow-hidden border">
-          <iframe
-            width="100%"
-            height="100%"
-            src={point.link_live_stream}
-            title={`Live stream cho ${point.name}`}
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          ></iframe>
-        </div>
-      </div>
-    );
-  };
-  // --- KẾT THÚC LOGIC RENDER ---
-
   // Trả về JSX, giao diện này sẽ tự động cập nhật khi state `point` thay đổi
   return (
     <>
@@ -172,9 +120,50 @@ export default function FloodDetailClient({ initialPoint }: FloodDetailClientPro
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-        {/* Cột trái: Livestream hoặc Ảnh */}
-        <div className="space-y-4">
-          {renderLiveStream()}
+        {/* Cột trái: Livestream VÀ Ảnh */}
+        <div className="space-y-6">
+          {/* --- HIỂN THỊ LIVE STREAM (NẾU CÓ) --- */}
+          {point.link_live_stream && (
+            <div>
+              <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
+                <Video size={22} /> Live Stream
+              </h2>
+              {point.link_live_stream.endsWith('.m3u8') ? (
+                // TRƯỜNG HỢP 1: Link HLS (.m3u8)
+                <HlsPlayer src={point.link_live_stream} />
+              ) : (
+                // TRƯỜNG HỢP 2: Link web khác (YouTube, v.v.)
+                <div className="aspect-video w-full bg-gray-200 rounded-lg overflow-hidden border">
+                  <iframe
+                    width="100%"
+                    height="100%"
+                    src={point.link_live_stream}
+                    title={`Live stream cho ${point.name}`}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  ></iframe>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* --- HIỂN THỊ ẢNH (CHỈ KHI ĐANG NGẬP) --- */}
+          {point.status_flood === 1 && (
+            <div>
+              <h2 className="text-xl font-semibold mb-3">
+                {/* Đổi tiêu đề nếu có cả video và ảnh */}
+                {point.link_live_stream ? 'Ảnh hiện trạng ngập' : 'Hình ảnh camera'}
+              </h2>
+              <div className="aspect-video w-full bg-gray-200 rounded-lg overflow-hidden border">
+                <InteractiveImage
+                  src={point.image_url} // Sẽ tự động dùng placeholder nếu src là undefined
+                  alt={`Hình ảnh ${point.name}`}
+                  fallbackText={point.name}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Cột phải: Thông số chi tiết */}
@@ -195,8 +184,8 @@ export default function FloodDetailClient({ initialPoint }: FloodDetailClientPro
             <DetailItem
               icon={Ruler}
               label="Bề rộng"
-              value={point.width_m}
-              unit="m"
+              value={point.width_cm} // <-- SỬ DỤNG TRƯỜNG MỚI
+              unit="cm" // <-- SỬ DỤNG ĐƠN VỊ MỚI
             />
             <DetailItem
               icon={Maximize}
