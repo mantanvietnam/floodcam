@@ -15,7 +15,7 @@ interface ApiCameraData {
   speed_max: number | null;
   width: number | null;
   acreage: number | null;
-  link_live_stream: string | null; // <-- THÊM TRƯỜNG MỚI TỪ API
+  link_live_stream: string | null;
 }
 
 interface ApiResponse {
@@ -25,72 +25,71 @@ interface ApiResponse {
 }
 
 // Hàm xử lý ảnh:
-// (Logic giữ nguyên, chỉ thay đổi hằng số thành biến config)
 function transformImageUrl(
   image: string | null,
   status: 0 | 1,
   name: string
 ): string {
   if (image) {
-    // Nếu ảnh là đường dẫn tương đối (ví dụ: /storage/image.png)
     if (image.startsWith("/")) {
-      return `${API_DOMAIN}${image}`; // <-- Sử dụng biến config
+      return `${API_DOMAIN}${image}`;
     }
-    // Nếu đã là URL tuyệt đối
     return image;
   }
-
-  // Nếu không có ảnh (null), tạo placeholder
   const statusColor = status === 1 ? "F87171" : "4ADE80";
   return `https://placehold.co/600x400/${statusColor}/FFFFFF?text=${encodeURIComponent(
     name
   )}`;
 }
 
+// --- HÀM HELPER (ĐÃ XÓA) ---
+// function calculateRadius(area_m2: number): number { ... }
+// ----------------------------
+
 // Gọi API thực tế
 export async function getFloodData(): Promise<FloodPoint[]> {
   try {
-    // --- THAY ĐỔI TỪ GET SANG POST ---
     const response = await fetch(API_URL, {
-      method: "POST", // <-- Đổi phương thức sang POST
+      method: "POST",
       headers: {
-        "Content-Type": "application/json", // <-- Thêm header cho POST request
+        "Content-Type": "application/json",
       },
-      // body: JSON.stringify({}), // Nếu BE cần gửi body, hãy thêm vào đây. Tạm thời để trống.
-      cache: "no-store", // Giữ nguyên 'no-store' để đảm bảo dữ liệu mới nhất
+      // body: JSON.stringify({}), // Nếu BE cần gửi body
+      cache: "no-store",
     });
-    // ---------------------------------
 
     if (!response.ok) {
       console.error("Lỗi khi gọi API:", response.statusText);
-      return []; // Trả về mảng rỗng nếu fetch lỗi
+      return [];
     }
 
     const apiResponse: ApiResponse = await response.json();
 
-    // Kiểm tra mã trả về từ API
     if (apiResponse.code !== 1 || !apiResponse.data) {
       console.error("API trả về lỗi:", apiResponse.mess);
       return [];
     }
 
     // -- Đây là bước quan trọng: Biến đổi (Map) dữ liệu API --
-    // Chuyển đổi cấu trúc API (ApiCameraData) sang cấu trúc nội bộ (FloodPoint)
     const transformedData: FloodPoint[] = apiResponse.data.map((item) => {
-      return {
-        // Chuyển đổi các trường không khớp
-        id: String(item.id), // API (number) -> App (string)
-        lat_gps: parseFloat(item.lat_gps), // API (string) -> App (number)
-        long_gps: parseFloat(item.long_gps), // API (string) -> App (number)
-        update_at: item.update_at * 1000, // API (giây) -> App (milliseconds)
-        image_url: transformImageUrl(item.image, item.status_flood, item.name), // API (image) -> App (image_url)
-        depth_cm: item.depth ?? undefined, // API (depth) -> App (depth_cm)
-        max_speed_kmh: item.speed_max ?? undefined, // API (speed_max) -> App (max_speed_kmh)
-        width_cm: item.width ?? undefined, // <-- ĐỔI TÊN TỪ width_m
-        affected_area_m2: item.acreage ?? undefined, // API (acreage) -> App (affected_area_m2)
-        link_live_stream: item.link_live_stream ?? undefined, // <-- THÊM TRƯỜNG MỚI VÀO LOGIC MAP
+      // --- LOGIC TÍNH BÁN KÍNH (ĐÃ XÓA) ---
+      // const radius_m = ...
+      // ---------------------------------
 
-        // Các trường đã khớp tên
+      return {
+        id: String(item.id),
+        lat_gps: parseFloat(item.lat_gps),
+        long_gps: parseFloat(item.long_gps),
+        update_at: item.update_at * 1000,
+        image_url: transformImageUrl(item.image, item.status_flood, item.name),
+        depth_cm: item.depth ?? undefined,
+        max_speed_kmh: item.speed_max ?? undefined,
+        width_cm: item.width ?? undefined,
+        affected_area_m2: item.acreage ?? undefined, // <-- VẪN GIỮ LẠI ĐỂ HIỂN THỊ
+        link_live_stream: item.link_live_stream ?? undefined,
+
+        // radius_m: radius_m, // <-- ĐÃ XÓA
+        
         name: item.name,
         status_flood: item.status_flood,
       };
@@ -99,6 +98,6 @@ export async function getFloodData(): Promise<FloodPoint[]> {
     return transformedData;
   } catch (error) {
     console.error("Lỗi nghiêm trọng khi fetch dữ liệu:", error);
-    return []; // Trả về mảng rỗng nếu có lỗi
+    return [];
   }
 }

@@ -18,4 +18,5 @@ export interface FloodPoint {
   width_cm?: number; // <-- ĐỔI TÊN TỪ width_m
   depth_cm?: number; // Độ sâu (cm)
   link_live_stream?: string; // <-- THÊM TRƯỜNG MỚI
+  //radius_m?: number;
 }

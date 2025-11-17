@@ -11,3 +11,7 @@ export const API_HOSTNAME =
 
 // URL API đầy đủ
 export const API_URL = `${API_DOMAIN}/apis/getListCameraAPI`;
+
+// Dán Mapbox Access Token của bạn vào đây
+// Tốt nhất là đặt nó trong file .env.local (NEXT_PUBLIC_MAPBOX_TOKEN)
+export const MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
